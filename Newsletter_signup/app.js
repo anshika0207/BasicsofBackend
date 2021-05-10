@@ -14,7 +14,11 @@ app.post("/", function(req, res){
   var name = req.body.fullname;
   var email = req.body.email;
 
-  console.log(name + " and " + email);
+  var data = {
+    members: [
+
+    ]
+  }
 
 });
 
