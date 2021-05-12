@@ -10,7 +10,7 @@ Tech-stack used:
 * Express
 * API
 
-#Todo List
+# Todo List
 This app consists of two todolists: one for general purpose and one for work.
 
 Tech stack used:
