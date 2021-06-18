@@ -1,47 +1,94 @@
 const express = require("express");
 const bodyParser = require("body-parser");
+const mongoose = require("mongoose");
 
 const app = express();
 app.set('view engine', 'ejs');
 
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(express.static("Public"));
-var items = [];
-var worklist = [];
+
+mongoose.connect('mongodb://localhost:27017/todoDB', {useNewUrlParser: true, useUnifiedTopology: true});
+
+const listSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: [true, "Enter valid name!"]
+  }
+});
+
+const Item = mongoose.model("Item", listSchema);
+
+const Food = new Item({
+  name: "Eat food"
+});
+
+const Sleep = new Item({
+  name: "Sleep right"
+})
+
+const Happy = new Item({
+  name: "Be happy!"
+})
+
+
+
+
+// Item.deleteMany({}, function(err){
+//   if(err){
+//     console.log(err);
+//   }
+//   else{
+//     console.log("Deleted all successfully!");
+//   }
+// })
 
 app.get("/", function(req, res){
-  var options = {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  };
 
-  var today  = new Date();
-  var tday = today.toLocaleDateString("en-US", options);
-  res.render("index",{day: tday, itm: items});
+  Item.find({},function(err, items){
+    if(items.length==0){
+      Item.insertMany([Food, Sleep, Happy], function(err){
+        if(err){
+          console.log(err);
+        }
+        else{
+          console.log("All inserted successfully");
+        }
+      })
+       res.redirect("/");
+    }
+    else{
+      res.render("index", {listTitle: "Today", newListItems: items});
+    }
+  })
 
 });
 
-app.get("/work", function(req,res){
-  res.render("index",{day: "WorkList", itm: worklist});
+app.get("/:other", function(req,res){
+  var name = req.params.other;
+  res.render("other", {
+    other: name
+  })
 });
 
 app.post("/", function(req, res){
 
   // console.log(req.body);
-  let inp = req.body.i;
+  var inp = req.body.addedItem;
 
-  if(req.body.list === "WorkList"){
-    console.log(worklist);
-    worklist.push(inp);
-    res.redirect("/work");
-  }
-  else{
-    items.push(inp);
-    res.redirect("/");
-  }
+  var added = new Item({
+    name: inp
+  });
 
+  Item.insertMany(added, function(err, added){
+    if(err){
+      console.log(err);
+    }
+    else{
+      console.log("New item added");
+    }
+  });
+  res.redirect("/");
 });
 
 
@@ -54,7 +101,20 @@ app.post("/", function(req, res){
 //   res.send()
 // });
 
+app.post("/delete", function(req,res){
+  var checkedId = req.body.checkbox;
+  Item.deleteOne({_id: checkedId}, function(err){
+    if(err){
+      console.log(err);
+    }
+    else{
+      console.log("Item deleted");
+    }
+  });
+  res.redirect("/");
+})
+
 
 app.listen(3000, function(req, res){
-  console.log("server up and running on prot 3000");
+  console.log("server up and running on port 3000");
 })
